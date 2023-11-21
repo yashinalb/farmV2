@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payments_tables",
+  "info": {
+    "singularName": "payments-table",
+    "pluralName": "payments-tables",
+    "displayName": "PaymentsTable",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "amount": {
+      "type": "float"
+    },
+    "date": {
+      "type": "date"
+    },
+    "payment_method": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::payment-method.payment-method",
+      "inversedBy": "payments_tables"
+    },
+    "invoice": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::invoice.invoice"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payment_methods",
+  "info": {
+    "singularName": "payment-method",
+    "pluralName": "payment-methods",
+    "displayName": "PaymentMethod",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "payments_tables": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payments-table.payments-table",
+      "mappedBy": "payment_method"
+    }
+  }
+}

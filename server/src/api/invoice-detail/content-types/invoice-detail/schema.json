@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "invoice_details",
+  "info": {
+    "singularName": "invoice-detail",
+    "pluralName": "invoice-details",
+    "displayName": "InvoiceDetail",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "quantity": {
+      "type": "decimal"
+    },
+    "price_per_unit": {
+      "type": "decimal"
+    },
+    "kdv": {
+      "type": "integer"
+    },
+    "stopaj": {
+      "type": "integer"
+    },
+    "komisyon": {
+      "type": "integer"
+    },
+    "invoice": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::invoice.invoice",
+      "inversedBy": "invoice_details"
+    },
+    "product_quantity_type": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::product-quantity-type.product-quantity-type"
+    },
+    "payment_status": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::payment-status.payment-status"
+    },
+    "product": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::product.product"
+    }
+  }
+}

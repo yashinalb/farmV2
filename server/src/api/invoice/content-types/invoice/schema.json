@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "invoices",
+  "info": {
+    "singularName": "invoice",
+    "pluralName": "invoices",
+    "displayName": "Invoice",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "date": {
+      "type": "date"
+    },
+    "total_amount": {
+      "type": "float"
+    },
+    "notes": {
+      "type": "blocks"
+    },
+    "buyers_info": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::buyers-info.buyers-info",
+      "inversedBy": "invoices"
+    },
+    "invoice_details": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::invoice-detail.invoice-detail",
+      "mappedBy": "invoice"
+    },
+    "payments_tables": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payments-table.payments-table"
+    }
+  }
+}

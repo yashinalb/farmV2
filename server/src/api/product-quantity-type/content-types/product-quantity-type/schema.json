@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "product_quantity_types",
+  "info": {
+    "singularName": "product-quantity-type",
+    "pluralName": "product-quantity-types",
+    "displayName": "ProductQuantityType"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    }
+  }
+}

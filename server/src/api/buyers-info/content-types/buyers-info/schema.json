@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "buyers_infos",
+  "info": {
+    "singularName": "buyers-info",
+    "pluralName": "buyers-infos",
+    "displayName": "BuyersInfo",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "contact_number": {
+      "type": "string"
+    },
+    "kdv": {
+      "type": "integer"
+    },
+    "stopaj": {
+      "type": "integer"
+    },
+    "komisyon": {
+      "type": "integer"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "invoices": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::invoice.invoice",
+      "mappedBy": "buyers_info"
+    },
+    "buyer_type": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::buyer-type.buyer-type"
+    }
+  }
+}
