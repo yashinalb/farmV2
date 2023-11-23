@@ -80,12 +80,16 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
         }));
         setSelectedProducts(updatedProducts);
     };
-    const handlePaymentStatusChange = (e) => {
-        setSelectedPaymentStatus(e.target.value);
-        const isGlobalPaid = paymentStatuses.find(status => status.id.toString() === e.target.value)?.attributes.name === 'Ödendi';
-        setIsPaid(isGlobalPaid);
-    };
 
+    const handlePaymentStatusChange = (e) => {
+        const selectedStatusId = e.target.value; // Declare the variable here
+        setSelectedPaymentStatus(selectedStatusId);
+
+        // Assuming '1' is the ID for 'Ödendi' (Fully Paid)
+        // and '3' is for a status like 'Partially Paid'
+        const isPaidStatus = selectedStatusId === '1' || selectedStatusId === '3';
+        setIsPaid(isPaidStatus);
+    };
 
     const handleIndividualKdvChange = (index, value) => {
         const updatedProducts = selectedProducts.map((product, idx) =>
@@ -190,6 +194,28 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
     const submitInvoice = () => {
         setSubmitting(true);
 
+        const isQuantityInvalid = selectedProducts.some(product => product.quantity <= 0);
+        if (isQuantityInvalid) {
+            alert("Please enter a valid quantity for all products.");
+            setSubmitting(false);
+            return;
+        }
+
+        const isQuantityTypeMissing = selectedProducts.some(product => !product.quantityTypeId);
+        if (isQuantityTypeMissing) {
+            alert("Please select a quantity type for all products.");
+            setSubmitting(false);
+            return;
+        }
+
+        const isPricePerUnitRequired = selectedPaymentStatus === '1';
+        const isPricePerUnitEmpty = selectedProducts.some(product => isPricePerUnitRequired && (!product.pricePerUnit || product.pricePerUnit === ''));
+        if (isPricePerUnitEmpty) {
+            alert("Please enter 'Price per unit' for all products.");
+            setSubmitting(false);
+            return;
+        }
+
         if (selectedProducts.length === 0) {
             alert("No invoice details to submit.");
             setSubmitting(false);
@@ -204,20 +230,20 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
         const totalAmount = selectedProducts.reduce((acc, curr) => {
             const pricePerUnit = curr.pricePerUnit ? Number(curr.pricePerUnit) : 0;
             const quantity = Number(curr.quantity);
-        
+
             // Calculate amounts
             const basePrice = pricePerUnit * quantity;
             const kdvAmount = basePrice * (Number(curr.kdv) / 100);
             const stopajAmount = basePrice * (Number(curr.stopaj) / 100);
             const komisyonAmount = basePrice * (Number(curr.komisyon) / 100);
-        
+
             // Total amount for current product
             const totalForCurrentProduct = basePrice + kdvAmount - stopajAmount - komisyonAmount;
-        
+
             // Accumulate total
             return acc + totalForCurrentProduct;
         }, 0);
-        
+
 
         createInvoice({
             data: {
@@ -314,8 +340,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                             />
                         </Grid>
                         <Grid item xs={12} lg={4}>
-                            <select onChange={handleBuyerChange} value={selectedBuyer} 
-                                        className='invoice_select_buyer'>
+                            <select onChange={handleBuyerChange} value={selectedBuyer}
+                                className='invoice_select_buyer'>
                                 <option value="">Select buyer</option> {/* This will be shown by default */}
                                 {buyers.map((buyer) => (
                                     <option key={buyer.id} value={buyer.id}>{buyer.attributes.name}</option>
@@ -405,7 +431,7 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                                             ))}
                                         </Select>
                                     </FormControl>
-                                </Grid>                               
+                                </Grid>
                                 <Grid item xs={12} lg={1}>
                                     <TextField
                                         label="KDV"
