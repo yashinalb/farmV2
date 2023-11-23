@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react';
 import { fetchActiveBuyers, fetchActiveProducts, createInvoice, createInvoiceDetail, fetchProductQuantityTypes, fetchPaymentStatus } from '../../services/apiService';
+import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import InputLabel from '@mui/material/InputLabel';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 const AddInvoiceComponents = ({ onFormSubmit }) => {
     const [buyers, setBuyers] = useState([]);
@@ -14,7 +26,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
     const [showForm, setShowForm] = useState(false);
     const [productQuantityTypes, setProductQuantityTypes] = useState({});
     const [paymentStatuses, setPaymentStatuses] = useState([]);
-    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('');
+    const defaultPaymentStatus = '2';
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState(defaultPaymentStatus);
     const [isPaid, setIsPaid] = useState(false);
 
 
@@ -53,21 +66,20 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
         const buyerId = e.target.value;
         setSelectedBuyer(buyerId);
 
-        const buyerKdv = buyers.find(buyer => buyer.id.toString() === buyerId)?.attributes.kdv;
-        const buyerStopaj = buyers.find(buyer => buyer.id.toString() === buyerId)?.attributes.stopaj;
-        const buyerKomisyon = buyers.find(buyer => buyer.id.toString() === buyerId)?.attributes.komisyon;
-        setSelectedBuyerKdv(buyerKdv || '');
-        setSelectedBuyerStopaj(buyerStopaj || '');
-        setSelectedBuyerKomisyon(buyerKomisyon || '');
+        const buyerKdv = Number(buyers.find(buyer => buyer.id.toString() === buyerId)?.attributes.kdv);
+        const buyerStopaj = Number(buyers.find(buyer => buyer.id.toString() === buyerId)?.attributes.stopaj);
+        const buyerKomisyon = Number(buyers.find(buyer => buyer.id.toString() === buyerId)?.attributes.komisyon);
+        setSelectedBuyerKdv(buyerKdv || 0);
+        setSelectedBuyerStopaj(buyerStopaj || 0);
+        setSelectedBuyerKomisyon(buyerKomisyon || 0);
         const updatedProducts = selectedProducts.map(product => ({
             ...product,
-            kdv: buyerKdv || '0',
-            stopaj: buyerStopaj || '0',
-            komisyon: buyerKomisyon || '0'
+            kdv: buyerKdv || 0,
+            stopaj: buyerStopaj || 0,
+            komisyon: buyerKomisyon || 0
         }));
         setSelectedProducts(updatedProducts);
     };
-
     const handlePaymentStatusChange = (e) => {
         setSelectedPaymentStatus(e.target.value);
         const isGlobalPaid = paymentStatuses.find(status => status.id.toString() === e.target.value)?.attributes.name === 'Ödendi';
@@ -77,32 +89,37 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
 
     const handleIndividualKdvChange = (index, value) => {
         const updatedProducts = selectedProducts.map((product, idx) =>
-            idx === index ? { ...product, kdv: value !== '' ? value : '0' } : product
+            idx === index ? { ...product, kdv: value !== '' ? Number(value) : 0 } : product
         );
         setSelectedProducts(updatedProducts);
     };
 
     const handleIndividualStopajChange = (index, value) => {
         const updatedProducts = selectedProducts.map((product, idx) =>
-            idx === index ? { ...product, stopaj: value !== '' ? value : '0' } : product
+            idx === index ? { ...product, stopaj: value !== '' ? Number(value) : 0 } : product
         );
         setSelectedProducts(updatedProducts);
     };
 
     const handleIndividualKomisyonChange = (index, value) => {
         const updatedProducts = selectedProducts.map((product, idx) =>
-            idx === index ? { ...product, komisyon: value !== '' ? value : '0' } : product
+            idx === index ? { ...product, komisyon: value !== '' ? Number(value) : 0 } : product
         );
         setSelectedProducts(updatedProducts);
     };
 
 
-
     const addProductSelection = () => {
         setShowForm(true);
         setSelectedProducts([...selectedProducts, {
-            productId: '', quantity: 0, quantityTypeId: '', pricePerUnit: '',
-            kdv: selectedBuyerKdv, stopaj: selectedBuyerStopaj, komisyon: selectedBuyerKomisyon
+            payment_status: defaultPaymentStatus,
+            productId: '',
+            quantity: 0,
+            quantityTypeId: '',
+            pricePerUnit: '',
+            kdv: selectedBuyerKdv,
+            stopaj: selectedBuyerStopaj,
+            komisyon: selectedBuyerKomisyon,
         }]);
     };
 
@@ -113,7 +130,7 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
 
     const handlePricePerUnitChange = (index, value) => {
         const updatedProducts = selectedProducts.map((product, idx) =>
-            idx === index ? { ...product, pricePerUnit: value } : product
+            idx === index ? { ...product, pricePerUnit: isPaid ? Number(value) : 0 } : product
         );
         setSelectedProducts(updatedProducts);
     };
@@ -127,6 +144,7 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
     };
 
     const handleProductChange = (index, productId) => {
+
         if (productId) {
             fetchProductQuantityTypes(productId)
                 .then(response => {
@@ -156,6 +174,7 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                 idx === index ? { ...sp, productId: '', quantityTypeId: '' } : sp
             );
             setSelectedProducts(updatedProducts);
+            console.log("Updated Selected Products State:", selectedProducts);
         }
     };
 
@@ -182,7 +201,23 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
             return;
         }
 
-        const totalAmount = selectedProducts.reduce((acc, curr) => acc + curr.quantity * products.find(p => p.id.toString() === curr.productId).attributes.price, 0);
+        const totalAmount = selectedProducts.reduce((acc, curr) => {
+            const pricePerUnit = curr.pricePerUnit ? Number(curr.pricePerUnit) : 0;
+            const quantity = Number(curr.quantity);
+        
+            // Calculate amounts
+            const basePrice = pricePerUnit * quantity;
+            const kdvAmount = basePrice * (Number(curr.kdv) / 100);
+            const stopajAmount = basePrice * (Number(curr.stopaj) / 100);
+            const komisyonAmount = basePrice * (Number(curr.komisyon) / 100);
+        
+            // Total amount for current product
+            const totalForCurrentProduct = basePrice + kdvAmount - stopajAmount - komisyonAmount;
+        
+            // Accumulate total
+            return acc + totalForCurrentProduct;
+        }, 0);
+        
 
         createInvoice({
             data: {
@@ -194,7 +229,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
             .then((invoiceResponse) => {
                 const invoiceId = invoiceResponse.data.data.id;
                 const detailPromises = selectedProducts.map((selectedProduct) => {
-                    const pricePerUnit = isPaid && selectedProduct.pricePerUnit ? selectedProduct.pricePerUnit : products.find(p => p.id.toString() === selectedProduct.productId).attributes.price;
+                    /*   const pricePerUnit = isPaid && selectedProduct.pricePerUnit ? selectedProduct.pricePerUnit : products.find(p => p.id.toString() === selectedProduct.productId).attributes.price;*/
+                    const pricePerUnit = isPaid && selectedProduct.pricePerUnit ? Number(selectedProduct.pricePerUnit) : products.find(p => p.id.toString() === selectedProduct.productId).attributes.price;
 
                     return createInvoiceDetail({
                         data: {
@@ -228,114 +264,292 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                 alert("Invoice and details submitted successfully."); // Using alert for success feedback
                 setShowForm(false); // Hide the form after submission
                 setSelectedProducts([]); // Reset the products
-                setSelectedPaymentStatus('');
                 setSelectedBuyer(''); // Reset the buyers
                 setSelectedBuyerKdv('');
                 setSelectedBuyerStopaj('');
                 setSelectedBuyerKomisyon('');
+                setSelectedPaymentStatus(defaultPaymentStatus);
+                setIsPaid(false);
             });
     };
     return (
         <div>
-            <h1>Create Invoice</h1>
-            {!showForm && <button onClick={addProductSelection}>Add Product</button>}
+            <Typography variant="h4" gutterBottom>Create Invoice</Typography>
+            {!showForm && (
+                <Button variant="contained" color="primary" onClick={addProductSelection}>
+                    Add Product
+                </Button>
+            )}
+
 
             {showForm && (
                 <>
-                    <input
-                        type="date"
-                        value={invoiceDate}
-                        onChange={(e) => setInvoiceDate(e.target.value)}
-                    />
-                    <select onChange={handleBuyerChange} value={selectedBuyer}>
-                        <option value="">Select buyer</option> {/* This will be shown by default */}
-                        {buyers.map((buyer) => (
-                            <option key={buyer.id} value={buyer.id}>{buyer.attributes.name}</option>
-                        ))}
-                    </select>
-                    <div>
-                        <h3>Payment Status</h3>
-                        {paymentStatuses.map((status) => (
-                            <label key={status.id}>
-                                <input
-                                    type="radio"
-                                    name="paymentStatus"
-                                    value={status.id}
-                                    checked={selectedPaymentStatus === status.id.toString()}
-                                    onChange={handlePaymentStatusChange}
-                                />
-                                {status.attributes.name}
-                            </label>
-                        ))}
-                    </div>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} lg={4}>
+                            <TextField
+                                type="date"
+                                value={invoiceDate}
+                                onChange={(e) => setInvoiceDate(e.target.value)}
+                                fullWidth
+                                InputLabelProps={{
+                                    style: { color: '#fff' } // Adjust the label color
+                                }}
+                                InputProps={{
+                                    style: { color: '#fff' } // Adjust the input text color
+                                }}
 
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: '#fff', // default
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#fff', // hover
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#fff', // focused
+                                        },
+                                    }
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} lg={4}>
+                            <select onChange={handleBuyerChange} value={selectedBuyer} 
+                                        className='invoice_select_buyer'>
+                                <option value="">Select buyer</option> {/* This will be shown by default */}
+                                {buyers.map((buyer) => (
+                                    <option key={buyer.id} value={buyer.id}>{buyer.attributes.name}</option>
+                                ))}
+                            </select>
+                        </Grid>
+                        <Grid item xs={12} lg={4}>
+                            <RadioGroup row aria-label="paymentStatus" name="paymentStatus" value={selectedPaymentStatus} onChange={handlePaymentStatusChange}>
+                                {paymentStatuses.map((status) => (
+                                    <FormControlLabel key={status.id} value={status.id} control={<Radio />} label={status.attributes.name} />
+                                ))}
+                            </RadioGroup>
+                        </Grid>
+                    </Grid>
 
 
                     {selectedProducts.map((selectedProduct, index) => (
-                        <div key={index}>
-                            <select
-                                value={selectedProduct.productId}
-                                onChange={(e) => handleProductChange(index, e.target.value)}
-                            >
-                                <option value="">Select product</option>
-                                {products.map((product) => (
-                                    <option key={product.id} value={product.id}>{product.attributes.name}</option>
-                                ))}
-                            </select>
-                            <input
-                                type="number"
-                                placeholder="Quantity"
-                                value={selectedProduct.quantity.toString()}
-                                onChange={(e) => handleQuantityChange(index, e.target.value)}
-                            />
-                            <select
-                                value={selectedProduct.quantityTypeId}
-                                onChange={(e) => handleQuantityTypeChange(index, e.target.value)}
-                            >
-                                <option value="">Select Quantity Type</option>
-                                {
-                                    productQuantityTypes[selectedProduct.productId]?.map(type => (
-                                        <option key={type.id} value={type.id}>{type.attributes.name}</option>
-                                    ))
-                                }
-                            </select>
-                            {isPaid && (
-                                <input
-                                    type="number"
-                                    placeholder="Price per unit"
-                                    value={selectedProduct.pricePerUnit || ''}
-                                    onChange={(e) => handlePricePerUnitChange(index, e.target.value)}
-                                />
-                            )}
-                            {selectedProducts.length > 1 && (
-                                <button type="button" onClick={() => removeProductSelection(index)}>-</button>
-                            )}
-                            <input
-                                placeholder="KDV"
-                                type="number"
-                                value={selectedProduct.kdv}
-                                onChange={(e) => handleIndividualKdvChange(index, e.target.value)}
-                            />
-                            <input
-                                placeholder="Stopaj"
-                                type="number"
-                                value={selectedProduct.stopaj}
-                                onChange={(e) => handleIndividualStopajChange(index, e.target.value)}
-                            />
-                            <input
-                                placeholder="Komisyon"
-                                type="number"
-                                value={selectedProduct.komisyon}
-                                onChange={(e) => handleIndividualKomisyonChange(index, e.target.value)}
-                            />
+                        <Box key={index}>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} lg={2}>
+                                    <select
+                                        value={selectedProduct.productId}
+                                        onChange={(e) => handleProductChange(index, e.target.value)}
+                                        className='invoice_select_product'
+                                    >
+                                        <option value="">Select product</option>
+                                        {products.map((product) => (
+                                            <option key={product.id} value={product.id}>{product.attributes.name}</option>
+                                        ))}
+                                    </select>
+                                </Grid>
+                                <Grid item xs={12} lg={2}>
+                                    <TextField
+                                        label="Quantity"
+                                        type="number"
+                                        placeholder="Quantity"
+                                        value={selectedProduct.quantity.toString()}
+                                        onChange={(e) => handleQuantityChange(index, e.target.value)}
+                                        InputLabelProps={{
+                                            style: { color: '#fff' } // Adjust the label color
+                                        }}
+                                        InputProps={{
+                                            style: { color: '#fff' } // Adjust the input text color
+                                        }}
 
-                            {index === selectedProducts.length - 1 && (
-                                <button type="button" onClick={addProductSelection}>+</button>
-                            )}
-                        </div>
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': {
+                                                    borderColor: '#fff', // default
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#fff', // hover
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#fff', // focused
+                                                },
+                                            },
+                                            margin: 1
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} lg={2}>
+                                    <FormControl fullWidth sx={{ margin: 1 }}>
+                                        <InputLabel sx={{ color: '#fff', '&.Mui-focused': { color: '#fff' }, }}>Select Quantity Type</InputLabel>
+                                        <Select
+                                            value={selectedProduct.quantityTypeId}
+                                            onChange={(e) => handleQuantityTypeChange(index, e.target.value)}
+                                            displayEmpty
+                                            sx={{
+                                                color: '#fff',
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#fff'
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'primary.main'
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'primary.main'
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Quantity Type</em>
+                                            </MenuItem>
+                                            {productQuantityTypes[selectedProduct.productId]?.map(type => (
+                                                <MenuItem key={type.id} value={type.id}>{type.attributes.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>                               
+                                <Grid item xs={12} lg={1}>
+                                    <TextField
+                                        label="KDV"
+                                        type="number"
+                                        value={selectedProduct.kdv || ''}
+                                        onChange={(e) => handleIndividualKdvChange(index, e.target.value)}
+                                        fullWidth
+                                        InputLabelProps={{
+                                            style: { color: '#fff' } // Adjust the label color
+                                        }}
+                                        InputProps={{
+                                            style: { color: '#fff' } // Adjust the input text color
+                                        }}
+
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': {
+                                                    borderColor: '#fff', // default
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#fff', // hover
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#fff', // focused
+                                                },
+                                            },
+                                            margin: 1
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} lg={1}>
+                                    <TextField
+                                        label="Stopaj"
+                                        type="number"
+                                        value={selectedProduct.stopaj || ''}
+                                        onChange={(e) => handleIndividualStopajChange(index, e.target.value)}
+                                        fullWidth
+                                        InputLabelProps={{
+                                            style: { color: '#fff' } // Adjust the label color
+                                        }}
+                                        InputProps={{
+                                            style: { color: '#fff' } // Adjust the input text color
+                                        }}
+
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': {
+                                                    borderColor: '#fff', // default
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#fff', // hover
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#fff', // focused
+                                                },
+                                            },
+                                            margin: 1
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} lg={1}>
+                                    <TextField
+                                        label="Komisyon"
+                                        type="number"
+                                        value={selectedProduct.komisyon || ''}
+                                        onChange={(e) => handleIndividualKomisyonChange(index, e.target.value)}
+                                        fullWidth
+                                        InputLabelProps={{
+                                            style: { color: '#fff' } // Adjust the label color
+                                        }}
+                                        InputProps={{
+                                            style: { color: '#fff' } // Adjust the input text color
+                                        }}
+
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': {
+                                                    borderColor: '#fff', // default
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#fff', // hover
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#fff', // focused
+                                                },
+                                            },
+                                            margin: 1
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} lg={2}>
+                                    {isPaid && (
+                                        <TextField
+                                            label="Price per unit"
+                                            type="number"
+                                            placeholder="Price per unit"
+                                            value={selectedProduct.pricePerUnit || ''}
+                                            onChange={(e) => handlePricePerUnitChange(index, e.target.value)}
+                                            InputLabelProps={{
+                                                style: { color: '#fff' } // Adjust the label color
+                                            }}
+                                            InputProps={{
+                                                style: { color: '#fff' } // Adjust the input text color
+                                            }}
+
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    '& fieldset': {
+                                                        borderColor: '#fff', // default
+                                                    },
+                                                    '&:hover fieldset': {
+                                                        borderColor: '#fff', // hover
+                                                    },
+                                                    '&.Mui-focused fieldset': {
+                                                        borderColor: '#fff', // focused
+                                                    },
+                                                },
+                                                margin: 1
+                                            }}
+                                        />
+                                    )}
+                                </Grid>
+
+                                <Grid item xs={2} lg={1}>
+                                    {selectedProducts.length > 1 && (
+                                        <Button type="button" onClick={() => removeProductSelection(index)} variant="contained" color="secondary" sx={{ margin: 2 }}>
+                                            -
+                                        </Button>
+                                    )}
+                                </Grid>
+                                <Grid item xs={2} lg={1}>
+                                    {index === selectedProducts.length - 1 && (
+                                        <Button type="button" onClick={addProductSelection} variant="contained" color="primary" sx={{ margin: 2 }}>
+                                            +
+                                        </Button>
+                                    )}
+                                </Grid>
+                            </Grid>
+                        </Box>
                     ))}
 
-                    <button onClick={submitInvoice} disabled={submitting || !selectedBuyer}>Submit Invoice</button>
+                    <Button onClick={submitInvoice} disabled={submitting || !selectedBuyer} variant="contained" color="primary" sx={{ margin: 1 }}>
+                        Submit Invoice
+                    </Button>
                 </>
             )}
         </div>

@@ -20,14 +20,15 @@ const DisplayBuyerComponents = ({ buyers }) => {
                                 <Typography>{buyer.attributes.name}</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
-                                <Typography>
-                                    <p>Type: {buyer.attributes.buyer_type.data.attributes.name}</p>
-                                    <p>KDV: {buyer.attributes.kdv}</p>
-                                    <p>Stopaj: {buyer.attributes.stopaj}</p>
-                                    <p>Komisyon: {buyer.attributes.komisyon}</p>
-                                    <p>Number: {buyer.attributes.contact_number}</p>
+                                <Typography component="div"> {/* Change the root component to div */}
+                                    Type: {buyer.attributes.buyer_type.data.attributes.name}<br />
+                                    KDV: {buyer.attributes.kdv}<br />
+                                    Stopaj: {buyer.attributes.stopaj}<br />
+                                    Komisyon: {buyer.attributes.komisyon}<br />
+                                    Number: {buyer.attributes.contact_number}
                                 </Typography>
                             </AccordionDetails>
+
                         </Accordion>
                     </Grid>
                 ))}
