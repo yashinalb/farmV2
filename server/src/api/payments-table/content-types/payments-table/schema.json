@@ -26,8 +26,9 @@
     },
     "invoice": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::invoice.invoice"
+      "relation": "manyToOne",
+      "target": "api::invoice.invoice",
+      "inversedBy": "payments_tables"
     }
   }
 }

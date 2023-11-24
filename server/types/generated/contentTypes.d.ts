@@ -955,7 +955,7 @@ export interface ApiPaymentsTablePaymentsTable extends Schema.CollectionType {
     >;
     invoice: Attribute.Relation<
       'api::payments-table.payments-table',
-      'oneToOne',
+      'manyToOne',
       'api::invoice.invoice'
     >;
     createdAt: Attribute.DateTime;

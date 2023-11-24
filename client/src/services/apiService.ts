@@ -61,11 +61,11 @@ export const createInvoice = (invoiceData) => {
 export const createInvoiceDetail = (invoiceDetailData) => {
   return axios.post('http://localhost:1337/api/invoice-details?populate=*', invoiceDetailData);
 };
-
-
+   
 export const fetchInvoices = () => {
-  return axios.get('http://localhost:1337/api/invoices?populate[0]=buyers_info&populate[1]=payments_tables&populate[2]=invoice_details.product&populate[3]=invoice_details.product_quantity_type&populate[4]=invoice_details.payment_status');
-};               
+  return axios.get('http://localhost:1337/api/invoices?populate[0]=buyers_info&populate[1]=payments_tables.payment_method&populate[2]=invoice_details.product&populate[3]=invoice_details.product_quantity_type&populate[4]=invoice_details.payment_status');
+};
+
 
 export const fetchProductQuantityTypes = (productId) => {
   return axios.get(`http://localhost:1337/api/products/${productId}?populate=product_quantity_types`);
@@ -73,4 +73,13 @@ export const fetchProductQuantityTypes = (productId) => {
 
 export const fetchPaymentStatus = () => {
   return axios.get(`http://localhost:1337/api/payment-statuses`);
+};      
+
+export const fetchPaymentMethods = () => {
+  return axios.get(`http://localhost:1337/api/payment-methods`);
 };
+
+export const createPayment = (paymentData) => {
+  return axios.post('http://localhost:1337/api/payments-tables?fields*&populate=*', paymentData);
+};
+

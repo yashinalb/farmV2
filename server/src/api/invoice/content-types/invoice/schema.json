@@ -36,7 +36,8 @@
     "payments_tables": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::payments-table.payments-table"
+      "target": "api::payments-table.payments-table",
+      "mappedBy": "invoice"
     }
   }
 }

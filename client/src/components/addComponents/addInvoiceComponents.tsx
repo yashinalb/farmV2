@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchActiveBuyers, fetchActiveProducts, createInvoice, createInvoiceDetail, fetchProductQuantityTypes, fetchPaymentStatus } from '../../services/apiService';
+import { fetchActiveBuyers, fetchActiveProducts, createInvoice, createInvoiceDetail, fetchProductQuantityTypes, fetchPaymentStatus, createPayment, fetchPaymentMethods } from '../../services/apiService';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
@@ -29,6 +29,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
     const defaultPaymentStatus = '2';
     const [selectedPaymentStatus, setSelectedPaymentStatus] = useState(defaultPaymentStatus);
     const [isPaid, setIsPaid] = useState(false);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [payments, setPayments] = useState([]);
 
 
     useEffect(() => {
@@ -58,6 +60,13 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                 console.error('Error fetching payment statuses:', error);
             });
 
+        fetchPaymentMethods()
+            .then((response) => {
+                setPaymentMethods(response.data.data);
+            })
+            .catch((error) => {
+                console.error('Error fetching payment methods:', error);
+            });
 
     }, []);
 
@@ -89,6 +98,9 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
         // and '3' is for a status like 'Partially Paid'
         const isPaidStatus = selectedStatusId === '1' || selectedStatusId === '3';
         setIsPaid(isPaidStatus);
+        if (isPaidStatus && payments.length === 0) {
+            addPayment();
+        }
     };
 
     const handleIndividualKdvChange = (index, value) => {
@@ -190,6 +202,22 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
         setSelectedProducts(newSelectedProducts);
     };
 
+    const addPayment = () => {
+        setPayments([...payments, { amount: '', date: new Date().toISOString().split('T')[0], paymentMethod: '' }]);
+    };
+    const removePayment = (index) => {
+        setPayments(payments.filter((_, idx) => idx !== index));
+    };
+
+
+    const handlePaymentChange = (index, field, value) => {
+        const updatedPayments = [...payments];
+        updatedPayments[index] = {
+            ...updatedPayments[index],
+            [field]: value
+        };
+        setPayments(updatedPayments);
+    };
 
     const submitInvoice = () => {
         setSubmitting(true);
@@ -253,7 +281,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
             }
         })
             .then((invoiceResponse) => {
-                const invoiceId = invoiceResponse.data.data.id;
+                const invoiceId = invoiceResponse.data.data.id; // Newly created invoice ID
+
                 const detailPromises = selectedProducts.map((selectedProduct) => {
                     /*   const pricePerUnit = isPaid && selectedProduct.pricePerUnit ? selectedProduct.pricePerUnit : products.find(p => p.id.toString() === selectedProduct.productId).attributes.price;*/
                     const pricePerUnit = isPaid && selectedProduct.pricePerUnit ? Number(selectedProduct.pricePerUnit) : products.find(p => p.id.toString() === selectedProduct.productId).attributes.price;
@@ -272,8 +301,21 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                         }
                     });
                 });
-
-                return Promise.all(detailPromises);
+                // Create payments if the invoice is paid or partially paid
+                const paymentPromises = isPaid ? payments.map((payment) => {
+                    if (!payment.amount || !payment.paymentMethod) {
+                        throw new Error('Payment details are not complete.');
+                    }
+                    return createPayment({
+                        data: {
+                            amount: payment.amount,
+                            date: payment.date,
+                            payment_method: payment.paymentMethod,
+                            invoice: invoiceId
+                        }
+                    });
+                }) : [];
+                return Promise.all([...detailPromises, ...paymentPromises]);
             })
             .then(() => {
                 // After successful submission and handling of details
@@ -296,6 +338,7 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                 setSelectedBuyerKomisyon('');
                 setSelectedPaymentStatus(defaultPaymentStatus);
                 setIsPaid(false);
+                setSubmitting(false);
             });
     };
     return (
@@ -313,6 +356,7 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                     <Grid container spacing={2}>
                         <Grid item xs={12} lg={4}>
                             <TextField
+                                label="Invocie Date"
                                 type="date"
                                 value={invoiceDate}
                                 onChange={(e) => setInvoiceDate(e.target.value)}
@@ -356,6 +400,114 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                             </RadioGroup>
                         </Grid>
                     </Grid>
+
+                    {isPaid && payments.map((payment, index) => (
+                        <Grid container spacing={2} key={index}>
+                            <Grid item xs={12} lg={3}>
+                                <TextField
+                                    label="Payment Amount"
+                                    type="number"
+                                    value={payment.amount}
+                                    onChange={(e) => handlePaymentChange(index, 'amount', e.target.value)}
+                                    fullWidth
+                                    InputLabelProps={{
+                                        style: { color: '#fff' } // Adjust the label color
+                                    }}
+                                    InputProps={{
+                                        style: { color: '#fff' } // Adjust the input text color
+                                    }}
+
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#fff', // default
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#fff', // hover
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#fff', // focused
+                                            },
+                                        },
+                                        margin: 1
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} lg={3}>
+                                <TextField
+                                    label="Payment Date"
+                                    type="date"
+                                    value={payment.date}
+                                    onChange={(e) => handlePaymentChange(index, 'date', e.target.value)}
+                                    fullWidth
+                                    InputLabelProps={{
+                                        style: { color: '#fff' } // Adjust the label color
+                                    }}
+                                    InputProps={{
+                                        style: { color: '#fff' } // Adjust the input text color
+                                    }}
+    
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#fff', // default
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#fff', // hover
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#fff', // focused
+                                            },
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} lg={3}>
+                                <FormControl fullWidth>
+                                <InputLabel sx={{ color: '#fff', '&.Mui-focused': { color: '#fff' }, }}>Select Payment Method</InputLabel>
+                                    <Select
+                                        value={payment.paymentMethod}
+                                        onChange={(e) => handlePaymentChange(index, 'paymentMethod', e.target.value)} 
+                                        sx={{
+                                            color: '#fff',
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#fff'
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'primary.main'
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'primary.main'
+                                            }
+                                        }}
+                                    >
+                                    <MenuItem value="">
+                                        <em>Select Method Type</em>
+                                    </MenuItem>
+                                        {paymentMethods.map((method) => (
+                                            <MenuItem key={method.id} value={method.id}>{method.attributes.name}</MenuItem>
+                                        ))}
+                                        
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={2} lg={1}>
+                                {payments.length > 1 && (
+                                    <Button type="button" onClick={() => removePayment(index)} variant="contained" color="secondary" sx={{ margin: 2 }}>
+                                        -
+                                    </Button>
+                                )}
+                            </Grid>
+                            <Grid item xs={2} lg={1}>
+                                {index === payments.length - 1 && (
+                                    <Button type="button" onClick={addPayment} variant="contained" color="primary" sx={{ margin: 2 }}>
+                                        +
+                                    </Button>
+                                )}
+                            </Grid>
+                        </Grid>
+                    ))}
+
 
 
                     {selectedProducts.map((selectedProduct, index) => (
