@@ -97,7 +97,7 @@ function App() {
   ]);
   return (
     <>
-      <Snackbar open={alert.open} autoHideDuration={6000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center'}}>
+      <Snackbar open={alert.open} autoHideDuration={8000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center'}}>
         <Alert severity={alert.severity} sx={{ width: '100%' }}>
           {alert.message}
         </Alert>

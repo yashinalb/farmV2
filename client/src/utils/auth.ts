@@ -31,6 +31,9 @@ export const login = async (email: string, password: string): Promise<LoginRespo
       localStorage.setItem('token', data.jwt);
       return { ok: true, data };
     } else {
+      if (response.status === 429) {
+        return { ok: false, error: 'Too many login attempts. Please try again later.' };
+      }
       return { ok: false, error: data.message || 'Username or Password is incorrect' };
     }
   } catch (error) {
