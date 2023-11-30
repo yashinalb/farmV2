@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableRow, Collapse, IconButton, Paper, styled } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow, Collapse, IconButton, Paper } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const DisplayInvoiceComponents = ({ invoices }) => {
   const [open, setOpen] = useState({});
@@ -58,6 +60,7 @@ const DisplayInvoiceComponents = ({ invoices }) => {
                           <th>Payment Method</th>
                           <th>Payment Date</th>
                           <th>Amount</th>
+                          <th>Actions</th>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -66,6 +69,14 @@ const DisplayInvoiceComponents = ({ invoices }) => {
                             <TableCell>{payment.attributes.payment_method.data.attributes.name}</TableCell>
                             <TableCell>{payment.attributes.date}</TableCell>
                             <TableCell>{payment.attributes.amount}</TableCell>
+                            <TableCell>
+                                    <IconButton onClick={() => handleEdit(payment, 'payment')}>
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton onClick={() => handleDelete(payment.id, 'payment')}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
