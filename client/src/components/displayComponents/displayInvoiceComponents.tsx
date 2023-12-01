@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableRow, Collapse, IconButton, Paper } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow, Collapse, IconButton, Paper, Button } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditPaymentModal from '../../components/modalComponents/EditPaymentModal';
+import AddPaymentModal from '../../components/modalComponents/AddPaymentModal';
 import { updatePayment } from '../../services/apiService';
+import { deletePayment } from '../../services/apiService';
 
 const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }) => {
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedInvoiceDetailId, setSelectedInvoiceDetailId] = useState(null);
+  const handleOpenAddPaymentModal = (invoiceDetailId) => {
+    setSelectedInvoiceDetailId(invoiceDetailId);
+    setIsPaymentModalOpen(true);
+  };
+
+
   const [open, setOpen] = useState({});
+
 
   const handleOpen = (id) => {
     setOpen(prev => ({ ...prev, [id]: !prev[id] }));
@@ -25,6 +36,20 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
     setEditingPayment(paymentDataForEdit);
   };
 
+  const handleDelete = (paymentId) => {
+    // Show confirmation dialog
+    const isConfirmed = window.confirm("Are you sure you want to delete this payment?");
+    if (isConfirmed) {
+      // Call deletePayment with the payment ID
+      deletePayment(paymentId).then(() => {
+        if (onFetchAndUpdate) {
+          onFetchAndUpdate(); // Fetch and update data after deletion
+        }
+      }).catch(error => {
+        console.error("Error deleting payment:", error);
+      });
+    }
+  };
 
   const saveEditedPayment = (updatedPayment) => {
     // Extract the ID from the updatedPayment object
@@ -86,6 +111,12 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
                     {/* Payment Details Table */}
                     <Table size="small" aria-label="payments" sx={{ backgroundColor: '#f0f8ff', margin: 1, borderRadius: 4 }}>
                       <TableHead>
+                        <TableRow>
+                          <Button onClick={() => handleOpenAddPaymentModal(invoiceDetail.id)} variant="contained" color="primary">
+                            Add Payment
+                          </Button>
+
+                        </TableRow>
                         <TableRow>
                           <th>Payment Method</th>
                           <th>Payment Date</th>
@@ -152,13 +183,13 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
         </TableBody>
       </Table>
       {editingPayment && (
-      <EditPaymentModal
-        payment={editingPayment}
-        paymentMethods={paymentMethods}
-        onSave={saveEditedPayment} // Pass saveEditedPayment as a prop
-        onClose={() => setEditingPayment(null)}
-      />
-    )}
+        <EditPaymentModal
+          payment={editingPayment}
+          paymentMethods={paymentMethods}
+          onSave={saveEditedPayment} // Pass saveEditedPayment as a prop
+          onClose={() => setEditingPayment(null)}
+        />
+      )}
 
     </Paper>
   );

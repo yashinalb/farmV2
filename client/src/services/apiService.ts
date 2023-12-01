@@ -154,3 +154,11 @@ export const updatePayment = (paymentId, paymentData) => {
     }
   });
 };
+
+export const deletePayment = (paymentId) => {
+  return axios.delete(`http://localhost:1337/api/payments-tables/${paymentId}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};
