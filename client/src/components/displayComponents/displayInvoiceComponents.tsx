@@ -4,17 +4,47 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditPaymentModal from '../../components/modalComponents/EditPaymentModal';
+import { updatePayment } from '../../services/apiService';
 
-const DisplayInvoiceComponents = ({ invoices }) => {
+const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }) => {
   const [open, setOpen] = useState({});
 
   const handleOpen = (id) => {
     setOpen(prev => ({ ...prev, [id]: !prev[id] }));
   };
-  
+  const [editingPayment, setEditingPayment] = useState(null);
+
+
+  const handleEdit = (paymentDetails) => {
+    const paymentDataForEdit = {
+      id: paymentDetails.id,
+      ...paymentDetails.attributes,
+      paymentMethod: paymentDetails.attributes.payment_method.data.id,  // Change this line
+    };
+    setEditingPayment(paymentDataForEdit);
+  };
+
+
+  const saveEditedPayment = (updatedPayment) => {
+    // Extract the ID from the updatedPayment object
+    const paymentId = updatedPayment.id;
+    if (paymentId) {
+      // Call updatePayment with the extracted ID and the updated payment data
+      updatePayment(paymentId, { data: updatedPayment }).then(() => {
+        if (onFetchAndUpdate) {
+          onFetchAndUpdate();
+        }
+      }).catch(error => {
+        console.error("Error updating payment:", error);
+      });
+    } else {
+      console.error("Payment ID is undefined", updatedPayment);
+    }
+  };
 
   return (
-    <Paper sx={{  background: '#fff' }}>
+    <Paper sx={{ background: '#fff' }}>
       <Table>
         <TableHead>
           <TableRow>
@@ -54,7 +84,7 @@ const DisplayInvoiceComponents = ({ invoices }) => {
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                   <Collapse in={open[invoice.id]} timeout="auto" unmountOnExit>
                     {/* Payment Details Table */}
-                    <Table size="small" aria-label="payments" sx={{ backgroundColor: '#f0f8ff', margin:1, borderRadius:4 }}>
+                    <Table size="small" aria-label="payments" sx={{ backgroundColor: '#f0f8ff', margin: 1, borderRadius: 4 }}>
                       <TableHead>
                         <TableRow>
                           <th>Payment Method</th>
@@ -70,13 +100,13 @@ const DisplayInvoiceComponents = ({ invoices }) => {
                             <TableCell>{payment.attributes.date}</TableCell>
                             <TableCell>{payment.attributes.amount}</TableCell>
                             <TableCell>
-                                    <IconButton onClick={() => handleEdit(payment, 'payment')}>
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleDelete(payment.id, 'payment')}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </TableCell>
+                              <IconButton onClick={() => handleEdit(payment, 'payment')}>
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton onClick={() => handleDelete(payment.id, 'payment')}>
+                                <DeleteIcon />
+                              </IconButton>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -121,7 +151,16 @@ const DisplayInvoiceComponents = ({ invoices }) => {
           ))}
         </TableBody>
       </Table>
-      </Paper>
+      {editingPayment && (
+      <EditPaymentModal
+        payment={editingPayment}
+        paymentMethods={paymentMethods}
+        onSave={saveEditedPayment} // Pass saveEditedPayment as a prop
+        onClose={() => setEditingPayment(null)}
+      />
+    )}
+
+    </Paper>
   );
 };
 

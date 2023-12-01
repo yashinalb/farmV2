@@ -148,5 +148,9 @@ export const createPayment = (paymentData) => {
 };
 
 export const updatePayment = (paymentId, paymentData) => {
-  return axios.put(`http://localhost:1337/api/payments-tables/${paymentId}`, { data: paymentData });
+  return axios.put(`http://localhost:1337/api/payments-tables/${paymentId}?populate=*`, paymentData, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
 };
