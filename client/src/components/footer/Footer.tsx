@@ -1,12 +1,12 @@
-import "./footer.scss"
+import { Box } from '@mui/material';
 
 const Footer = () => {
   return (
-    <div className="footer">
+    <Box sx={{ p: 3, textAlign: 'center' }}>
       <span>MNAadmin</span>
       <span>© MNAPixel Dev Admin Dashboard</span>
-    </div>
-  )
+    </Box>
+  );
 }
 
-export default Footer
+export default Footer;

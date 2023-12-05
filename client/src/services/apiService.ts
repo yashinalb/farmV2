@@ -162,3 +162,23 @@ export const deletePayment = (paymentId) => {
     }
   });
 };
+
+export const createNewPayment = (paymentData) => {
+  console.log('Sending payment data:', paymentData); // To debug what's being sent
+
+  return axios.post('http://localhost:1337/api/payments-tables?fields*&populate=*', { data: paymentData }, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+      'Content-Type': 'application/json',
+    },
+  }).then(response => {
+    console.log("Payment created successfully", response.data);
+  }).catch(error => {
+    console.error("Error creating payment:", error);
+  });
+};
+
+
+
+
+

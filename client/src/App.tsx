@@ -1,24 +1,33 @@
 import { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
-import { Snackbar, Alert } from '@mui/material';
-import Home from "./pages/home/Home";
-import Invoice from "./pages/invoice/Invoice";
-import AddBuyer from "./pages/add-buyer/AddBuyer";
-import AddProducts from "./pages/add-products/AddProducts";
+import { Snackbar, Alert, CssBaseline, Box, Toolbar, AppBar, Drawer, Typography, IconButton, Button, ThemeProvider, createTheme } from '@mui/material';
+import Home from './pages/home/Home';
+import Invoice from './pages/invoice/Invoice';
+import AddBuyer from './pages/add-buyer/AddBuyer';
+import AddProducts from './pages/add-products/AddProducts';
 import Login from './pages/login/Login';
-import Navbar from "./components/navbar/Navbar";
-import Footer from "./components/footer/Footer";
-import Menu from "./components/menu/Menu";
-import "./styles/global.scss";
-import { login } from './utils/auth';
-import { logout } from './utils/auth';
+import Navbar from './components/navbar/Navbar';
+import Footer from './components/footer/Footer';
+import Menu from './components/menu/Menu';
+import { login, logout } from './utils/auth';
 
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    // Check the local storage for a token to determine initial state
-    return !!localStorage.getItem('token');
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const theme = createTheme({
+    breakpoints: {
+      values: {
+        xs: 0,
+        sm: 600,
+        md: 960,
+        lg: 1280,
+        xl: 1920,
+      },
+    },
+    // ... other theme properties
   });
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'));
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -59,24 +68,27 @@ function App() {
     setIsLoggedIn(false);
   };
 
-  const Layout = () => {
-    return (
-      <div className="main">
-        <Navbar onLogout={handleLogout} />
-        <div className="container">
-          <div className="menuContainer">
-            <Menu />
-          </div>
-          <div className="contentContainer">
-            <Outlet />
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-    
-    
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
   };
+
+  const drawerWidth = 240; 
+
+  const Layout = () => (
+   <ThemeProvider theme={theme}>
+   <Box sx={{ display: 'flex' }}>
+     <CssBaseline />
+     <Navbar onLogout={handleLogout} handleDrawerToggle={handleDrawerToggle} />
+     <Menu mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
+     <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, marginLeft: { sm: mobileOpen ? `${drawerWidth}px` : '0px' } }}>
+       <Toolbar />
+       <Outlet />
+       <Footer />
+     </Box>
+   </Box>
+ </ThemeProvider>
+  );
+
   const router = createBrowserRouter([
 
     {
@@ -97,15 +109,16 @@ function App() {
   ]);
   return (
     <>
+     <ThemeProvider theme={theme}>
       <Snackbar open={alert.open} autoHideDuration={8000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center'}}>
         <Alert severity={alert.severity} sx={{ width: '100%' }}>
           {alert.message}
         </Alert>
       </Snackbar>
-
       <RouterProvider router={router}>
         {/* ... rest of your component */}
       </RouterProvider>
+    </ThemeProvider>
     </>
   );
 }

@@ -458,7 +458,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                                             '&.Mui-focused fieldset': {
                                                 borderColor: '#fff', // focused
                                             },
-                                        }
+                                        },
+                                        margin: 1
                                     }}
                                 />
                             </Grid>
@@ -478,7 +479,8 @@ const AddInvoiceComponents = ({ onFormSubmit }) => {
                                             },
                                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                                                 borderColor: 'primary.main'
-                                            }
+                                            },
+                                            margin: 1
                                         }}
                                     >
                                     <MenuItem value="">
