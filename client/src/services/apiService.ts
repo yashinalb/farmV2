@@ -171,14 +171,34 @@ export const createNewPayment = (paymentData) => {
       Authorization: `Bearer ${localStorage.getItem('token')}`,
       'Content-Type': 'application/json',
     },
-  }).then(response => {
-    console.log("Payment created successfully", response.data);
-  }).catch(error => {
-    console.error("Error creating payment:", error);
   });
 };
 
+export const updateInvoiceDetail = (invoiceDetailId, invoiceDetailData) => {
+  return axios.put(`http://localhost:1337/api/invoice-details/${invoiceDetailId}?populate=*`, invoiceDetailData, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};
 
+export const updateInvoice = (invoiceId, data) => {
+  return axios.put(`http://localhost:1337/api/invoices/${invoiceId}`, data); // replace with your actual API endpoint and method
+};
 
+export const deleteInvoiceDetailApi = (invoiceDetailId) => {
+  return axios.delete(`http://localhost:1337/api/invoice-details/${invoiceDetailId}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};
 
-
+export const fetchInvoiceDetailsAndUpdateTotal = (invoiceId) => {
+  // Fetch the updated invoice details
+  return axios.get(`http://localhost:1337/api/invoices/${invoiceId}?populate=invoice_details`, {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};

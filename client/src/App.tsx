@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
-import { Snackbar, Alert, CssBaseline, Box, Toolbar, AppBar, Drawer, Typography, IconButton, Button, ThemeProvider, createTheme } from '@mui/material';
+import { Snackbar, Alert, CssBaseline, Box, Toolbar, ThemeProvider, createTheme } from '@mui/material';
 import Home from './pages/home/Home';
 import Invoice from './pages/invoice/Invoice';
 import AddBuyer from './pages/add-buyer/AddBuyer';
@@ -51,16 +51,16 @@ function App() {
     const result = await login(email, password);
     if (result.ok) {
       setIsLoggedIn(true);
-      setAlert(prev => ({ 
-        open: true, 
-        message: result.ok ? 'Logged in successfully!' : (result.error || 'Authentication failed'), 
-        severity: result.ok ? 'success' : 'error' 
+      setAlert(prev => ({
+        open: true,
+        message: result.ok ? 'Logged in successfully!' : (result.error || 'Authentication failed'),
+        severity: result.ok ? 'success' : 'error'
       }));
     } else {
       setAlert({ open: true, message: result.error || 'Authentication failed', severity: 'error' });
     }
   };
-  
+
 
 
   const handleLogout = () => {
@@ -72,21 +72,24 @@ function App() {
     setMobileOpen(!mobileOpen);
   };
 
-  const drawerWidth = 240; 
+  const drawerWidth = 240;
 
   const Layout = () => (
-   <ThemeProvider theme={theme}>
-   <Box sx={{ display: 'flex' }}>
-     <CssBaseline />
-     <Navbar onLogout={handleLogout} handleDrawerToggle={handleDrawerToggle} />
-     <Menu mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
-     <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, marginLeft: { sm: mobileOpen ? `${drawerWidth}px` : '0px' } }}>
-       <Toolbar />
-       <Outlet />
-       <Footer />
-     </Box>
-   </Box>
- </ThemeProvider>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        <Navbar onLogout={handleLogout} handleDrawerToggle={handleDrawerToggle} />
+        <Menu mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
+        <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, marginLeft: { sm: mobileOpen ? `${drawerWidth}px` : '0px' } }}>
+          <Toolbar />
+          <div style={{ backgroundColor: 'lightblue' }}>
+            <Outlet />
+          </div>
+
+          <Footer />
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 
   const router = createBrowserRouter([
@@ -109,16 +112,16 @@ function App() {
   ]);
   return (
     <>
-     <ThemeProvider theme={theme}>
-      <Snackbar open={alert.open} autoHideDuration={8000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center'}}>
-        <Alert severity={alert.severity} sx={{ width: '100%' }}>
-          {alert.message}
-        </Alert>
-      </Snackbar>
-      <RouterProvider router={router}>
-        {/* ... rest of your component */}
-      </RouterProvider>
-    </ThemeProvider>
+      <ThemeProvider theme={theme}>
+        <Snackbar open={alert.open} autoHideDuration={8000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert severity={alert.severity} sx={{ width: '100%' }}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
+        <RouterProvider router={router}>
+          {/* ... rest of your component */}
+        </RouterProvider>
+      </ThemeProvider>
     </>
   );
 }
