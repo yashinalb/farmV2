@@ -24,6 +24,15 @@ export const fetchBuyerTypes = () => {
 });
 };
 
+export const fetchBuyerByInvoiceId = (invoiceId) => {
+  return axios.get(`http://localhost:1337/api/invoices/${invoiceId}?populate=buyers_info`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};
+
+
 export const createBuyer = (buyer) => {
   const data = {
     data: {

@@ -9,13 +9,22 @@ const InvoiceCreationForm = () => {
   const [invoices, setInvoices] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
 
-  const fetchAndUpdateInvoices = () => {
-    fetchInvoices().then(response => {
-      setInvoices(response.data.data);
-    }).catch(error => {
-      console.error("Error fetching invoices:", error);
+ const fetchAndUpdateInvoices = () => {
+  fetchInvoices().then(response => {
+    const fetchedInvoices = response.data.data;
+    // Create a new Set to store unique IDs
+    const uniqueIds = new Set();
+    const uniqueInvoices = fetchedInvoices.filter(invoice => {
+      const isDuplicate = uniqueIds.has(invoice.id);
+      uniqueIds.add(invoice.id);
+      return !isDuplicate;
     });
-  };
+    setInvoices(uniqueInvoices);
+  }).catch(error => {
+    console.error("Error fetching invoices:", error);
+  });
+};
+
 
   useEffect(() => {
     fetchAndUpdateInvoices();

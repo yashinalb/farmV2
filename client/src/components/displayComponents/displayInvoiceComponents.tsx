@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Collapse, IconButton, Paper, Button, Select, MenuItem } from '@mui/material';
-import { createNewPayment, updatePayment, deletePayment, fetchPaymentStatus, fetchActiveProducts, updateInvoiceDetail, updateInvoice, deleteInvoiceDetailApi, fetchInvoiceDetailsAndUpdateTotal } from '../../services/apiService';
+import { createNewPayment, updatePayment, deletePayment, fetchPaymentStatus, fetchActiveProducts, updateInvoiceDetail, updateInvoice, deleteInvoiceDetailApi, fetchInvoiceDetailsAndUpdateTotal, fetchBuyerByInvoiceId } from '../../services/apiService';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import EditIcon from '@mui/icons-material/Edit';
@@ -301,11 +301,24 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
   // Add invoice detail
   const [isInvoiceDetailModalOpen, setIsInvoiceDetailModalOpen] = useState(false);
   const [selectedInvoiceDetailId, setSelectedInvoiceDetailId] = useState(null);
+  const [selectedBuyerData, setSelectedBuyerData] = useState(null);
 
   const handleOpenAddInvoiceDetailModal = (invoiceId) => {
-    setSelectedInvoiceDetailId(invoiceId);
-    setIsInvoiceDetailModalOpen(true);
-  };
+    fetchBuyerByInvoiceId(invoiceId).then(response => {
+        const buyerAttributes = response.data.data.attributes.buyers_info.data.attributes;
+        setSelectedBuyerData({
+            kdv: buyerAttributes.kdv || 0,
+            stopaj: buyerAttributes.stopaj || 0,
+            komisyon: buyerAttributes.komisyon || 0
+        });
+        setSelectedInvoiceDetailId(invoiceId);
+        setIsInvoiceDetailModalOpen(true);
+    }).catch(error => {
+        console.error('Error fetching buyer data:', error);
+    });
+};
+
+  
   return (
     <Paper sx={{ background: '#fff' }}>
       <Table>
@@ -321,6 +334,7 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
         </TableHead>
         <TableBody>
           {invoices.map((invoice) => (
+            console.log(`Rendering invoice with id: ${invoice.id}`),
             <React.Fragment key={invoice.id}>
               <TableRow>
                 <TableCell>
@@ -346,7 +360,7 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
               <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                   <Collapse in={open[invoice.id]} timeout="auto" unmountOnExit>
-                    <div key={invoice.id}>
+                  <div key={`div1-${invoice.id}`}>
                       <Button onClick={() => handleOpenAddPaymentModal(invoice.id)} variant="contained" color="primary">
                         Add Payment
                       </Button>
@@ -380,7 +394,7 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
                       </TableBody>
                     </Table>
                     {/* Invoice Details Table */}
-                    <div key={invoice.id}>
+                    <div key={`div2-${invoice.id}`}>
                       <Button onClick={() => handleOpenAddInvoiceDetailModal(invoice.id)} variant="contained" color="primary">
                         Add Invoice Detail
                       </Button>
@@ -544,6 +558,9 @@ const DisplayInvoiceComponents = ({ invoices, paymentMethods, onFetchAndUpdate }
           products={products}
           productQuantityTypes={productQuantityTypes}
           paymentStatuses={paymentStatuses}
+          selectedInvoiceDetailId={selectedInvoiceDetailId} // you need to pass the selected invoice ID here
+          selectedBuyerData={selectedBuyerData}
+          fetchAndUpdateInvoices={onFetchAndUpdate}
         />
       )}
     </Paper>
