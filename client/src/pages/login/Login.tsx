@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, Container, TextField, Typography, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 function Login({ onLogin, setAlert }) {
   const navigate = useNavigate();
@@ -85,6 +86,13 @@ function Login({ onLogin, setAlert }) {
         >
           {isSubmitting ? <CircularProgress size={24} /> : 'Sign In'}
         </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', mt: 2 }}>
+            <Link to="/forgot-password" style={{ textDecoration: 'none' }}>
+              <Typography variant="body2">
+                Forgot password?
+              </Typography>
+            </Link>
+          </Box>
       </Box>
     </Box>
   </Container>

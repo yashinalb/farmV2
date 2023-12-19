@@ -9,8 +9,8 @@ import Login from './pages/login/Login';
 import Navbar from './components/navbar/Navbar';
 import Footer from './components/footer/Footer';
 import Menu from './components/menu/Menu';
-import { login, logout } from './utils/auth';
-
+import ForgotPassword from './components/login/forgotPassword';
+import { login, logout, forgotPassword } from './utils/auth';
 
 function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -98,6 +98,10 @@ function App() {
       path: '/login',
       element: isLoggedIn ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} setAlert={setAlert} />
       ,
+    },
+    {
+      path: '/forgot-password',
+      element: <ForgotPassword onForgotPassword={forgotPassword} setAlert={setAlert} />,
     },
     {
       path: "/",

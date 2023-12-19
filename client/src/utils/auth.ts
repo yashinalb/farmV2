@@ -40,3 +40,27 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     return { ok: false, error: error.message };
   }
 };
+
+export const forgotPassword = async (email: string): Promise<LoginResponse> => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return { ok: true, data };
+    } else {
+      return { ok: false, error: data.message || 'An error occurred' };
+    }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+};
